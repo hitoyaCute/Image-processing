@@ -10,18 +10,58 @@ lab = []
 laber=0
 
 
+
+
+
+
+
 def main():
+	global paint
 	global lab
 	img = "image.jpg"
 	out = "output.jpg"
 	f = 10
 	global laber
 	laber  = rgbToLab
+	color_states = 4
+	lab = [laber(i) for i in paint.copy()]
+	#lab = [laber(round(i*255/(color_states-1))) for i in range(color_states)]
+	temp = [round(i*255/(color_states-1)) for i in range(color_states)]
+	paint = []
+	for r in temp.copy():
+		for g in temp.copy():
+			for b in temp.copy():
+				paint.append((r,g,b))
 	lab = [laber(i) for i in paint.copy()]
 	
 	
 	
 	w,h,pixel = openImg(img)
+	"""
+	a = [round(i*255/(color_states-1)) for i in range(color_states)]
+	def s(x):
+		t = [abs(i-x) for i in a.copy()]
+		s = a[t.index(min(t))]
+		#print(s,x)
+		return s
+	largeImg = []
+	img = [[tuple(map(s,pixel[i+j])) for i in range(w)]for j in range(0,h*w,w)]
+	for y in range(h):
+		new=[]
+		for x in range(w):
+			new.extend([img[y][x]]*f)
+		largeImg.extend(new*f)
+	
+	print("done procesing",len(largeImg)**0.5, [])
+	#check(img)
+	makeImg(w*f,h*f,largeImg,out)
+	print("done creating img :D")#
+
+
+	
+	
+	
+	return """
 	print(f"done opening h:{h} w:{w}\nprocesing pls wait", len(pixel)**0.5)
 	largeIm=[]
 	for y in range(0,h*w,w):
@@ -134,7 +174,7 @@ def closestColCiede2000(col):
 	return d.index(min(d))
  
 def closestColCiede20002(col):
-	d = [delta_E_00(laber(col),lab[i]) for i in range(255)]
+	d = [delta_E_00(laber(col),i) for i in lab.copy()]
 	return d.index(min(d))
 def delta_E_00(color1, color2):
     # Calculate LAB values for the two colors
