@@ -1,5 +1,5 @@
 from pyciede2000 import ciede2000
-from PIL import Image
+from PIL import Image#install the "pillow" insted of "PIL"
 import math
 import numpy as np
 
