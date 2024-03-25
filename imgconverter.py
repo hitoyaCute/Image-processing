@@ -8,7 +8,7 @@ paint = [[222, 165, 164], [214, 145, 136], [173, 111, 105], [128, 64, 64], [77, 
 paint = [tuple(i)for i in paint]
 lab = []
 laber=0
-
+mlen = 0
 
 
 
@@ -16,27 +16,32 @@ laber=0
 
 
 def main():
+	
 	global paint
 	global lab
+	global mlen
 	img = "image.jpg"
 	out = "output.jpg"
 	f = 10
 	global laber
-	laber  = rgbToLab
+	laber  = rgb_to_lab
 	color_states = 4
 	lab = [laber(i) for i in paint.copy()]
-	#lab = [laber(round(i*255/(color_states-1))) for i in range(color_states)]
+	
+	
+	"""lab = [laber(round(i*255/(color_states-1))) for i in range(color_states)]
 	temp = [round(i*255/(color_states-1)) for i in range(color_states)]
 	paint = []
 	for r in temp.copy():
 		for g in temp.copy():
 			for b in temp.copy():
 				paint.append((r,g,b))
-	lab = [laber(i) for i in paint.copy()]
-	
+	lab = [laber(i) for i in paint.copy()]"""
+	mlen=len(paint)
 	
 	
 	w,h,pixel = openImg(img)
+
 	"""
 	a = [round(i*255/(color_states-1)) for i in range(color_states)]
 	def s(x):
@@ -70,6 +75,7 @@ def main():
 			new.extend([pixel[y+x]]*f)
 		largeIm.extend(new*f)
 	makeImg(w*f,h*f, largeIm,"original.jpg")
+	
 	#img=[getClosestCol(pixel[y+x]) for y in range(h) for _ in range(f) for x in range(w) for _ in range(f)]
 	img = [[tuple(paint[closestColCiede20002(pixel[i+j])]) for i in range(w)]for j in range(0,h*w,w)]
 	#img = [[tuple(paint[highbreed(pixel[i+j])]) for i in range(w)]for j in range(0,h*w,w)]
@@ -93,6 +99,7 @@ def main():
 
 def highbreed (col):
     #this is just experiment lmao
+    #this is as it matches the color but it's very noticeable if you zoom it pixelize
     L1,a1,b1=rgb_to_lab(col)
     score = 99999999
     id= 0
@@ -119,6 +126,7 @@ def highbreed (col):
         delta_E+=13
         deltaE+= 61
         #delta_E = 0 if delta_E < 0 else math.sqrt(delta_E)
+        #will check if cie76 is relatively close to cir94
         if ((delta_E**2)+(deltaE**2))**0.5*(+delta_E)/(1+deltaE) <= score:
         	score = delta_E
         	id = i
@@ -132,9 +140,9 @@ def closestColCie76(color1):
     id = 0
     #print(color1)
     l,a,b = laber(color1)
-    for i in range(255):
+    for i in range(mlen):
         L,A,B=lab[i]
-        deltaE = ((l-L)**2+(a-A)**2+(b-B)**2)**0.5
+        deltaE = ((l-L)**2+(a-A)**2+(b-B)**2)
         if deltaE <= score:
         	score = deltaE
         	id = i
@@ -144,7 +152,7 @@ def closestColCie94(color1):
     L1, a1, b1 = laber(color1)
     score = 9999999999
     id = 0
-    for i in range(255):
+    for i in range(mlen):
         L2, a2, b2 = lab[i]
 
         delta_L = L2 - L1
@@ -174,6 +182,7 @@ def closestColCiede2000(col):
 	return d.index(min(d))
  
 def closestColCiede20002(col):
+
 	d = [delta_E_00(laber(col),i) for i in lab.copy()]
 	return d.index(min(d))
 def delta_E_00(color1, color2):
@@ -220,8 +229,8 @@ def delta_E_00(color1, color2):
         rt * (delta_c / (sc)) * (delta_h / (sh))
     )**0.5
     return a if type(a)!=type(complex(1)) else 99999
- 
- 
+
+
 
 def _convert_gamma(value):
 	return value / 12.92 if value <= 0.04045 else (value + 0.055) / 1.055**2.4
@@ -249,8 +258,13 @@ def makeImg(w,h,pixel,outpath):
 
 
 def closestColCiede20003(col):
-	d = [CIEDE2000(laber(col),lab[i]) for i in range(255)]
-	return d.index(min(d))
+	d = [CIEDE2000(laber(col),lab[i]) for i in range(mlen)]
+	try:
+		
+		return d.index(min(d))
+	except:
+		print(list(d), col,mel)
+		raise Error ("idk what happen here man")
 
 def CIEDE2000(Lab_1, Lab_2):
     '''Calculates CIEDE2000 color distance between two CIE L*a*b* colors'''
@@ -346,13 +360,14 @@ __version__ = "0.0.1" """
 
 def rgb_to_lab(rgb):
     #D65
-    r, g, b = [(x / 255.0) for x in rgb]
+    r,g,b = rgb
+    r,g,b = [((j + 0.055)/1.055)**2.4 if j > 0.04045 else j/12.92 for j in (r/255,g/255,b/255)]
 
     x = lf((r * 0.4124564 + g * 0.3575761 + b * 0.1804375)/0.950489)
     y = lf((r * 0.2126729 + g * 0.7151522 + b * 0.0721750))
     z = lf((r * 0.0193339 + g * 0.1191920 + b * 0.9503041)/1.085188)
 
-    return [116 * y - 16, (x - y) * 500,  (y - z) * 200]
+    return [(116 * y - 16), (x - y) * 500,  (y - z) * 200]
 def rgbToLab(rgb):
 	r,g,b = rgb
 	r,g,b = [((j + 0.055)/1.055)**2.4 if j > 0.04045 else j/12.92 for j in (r/255,g/255,b/255)]
@@ -366,48 +381,64 @@ def rgbToLab(rgb):
 	return (116*lf(Y) - 16, 500*(lf(X/Xn)-lf(Y)), 200*(lf(Y)-lf(Z/Zn)))
 
 
-def rgb2lab(col,C=255, illuminant='D65'):
+def rgb2lab(col,C=255, illuminant='D50'):
     # Normalise values
     r = col[0]/C
     g = col[1]/C
     b = col[2]/C
     # Linearise RGB values
-    rgb = np.array([r,g,b])
-    for i,j in enumerate(rgb):
-        rgb[i] = ((j + 0.055)/1.055)**2.4 if j > 0.04045 else j/12.92
+    r,g,b = [((j + 0.055)/1.055)**2.4 if j > 0.04045 else j/12.92 for j in (r/255,g/255,b/255)]
+    rgb=(r,g,b)
     # Convert to XYZ. Need to decide what RGB we are using
     # http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
     # https://en.wikipedia.org/wiki/CIELAB_color_space
     if illuminant == 'D50':
         # sRGB
-        M = np.array([[0.4360747,  0.3850649,  0.1430804], \
+        M = ([[0.4360747,  0.3850649,  0.1430804], \
                      [0.2225045,  0.7168786,  0.0606169], \
                      [0.0139322,  0.0971045,  0.7141733]])
-        Xn = 96.4242
-        Yn = 100.
-        Zn = 82.5188
+        Xn = 0.964242
+        Zn = 0.825188
     elif illuminant == 'D65':
-        M = np.array([[0.4124564,  0.3575761,  0.1804375], \
+        M = ([[0.4124564,  0.3575761,  0.1804375], \
                       [0.2126729,  0.7151522,  0.0721750], \
                       [0.0193339,  0.1191920,  0.9503041]])
         # D65 illuminant
-        Xn = 95.0489
-        Yn = 100.
-        Zn = 108.5188
+        Xn = 0.950489
+        Zn = 1.085188
     else:
         print("Error. 'D50' or 'D65' are the only allowed values for illuminant.")
         return
-    XYZ = np.dot(M,rgb)*100
+    XYZ = np.dot(M,rgb)
     X = XYZ[0]
     Y = XYZ[1]
     Z = XYZ[2]
     # Finally convert to Lab
-    L = 116*lf(Y/Yn) - 16
-    a = 500*(lf(X/Xn)-lf(Y/Yn))
-    b = 200*(lf(Y/Yn)-lf(Z/Zn))
+    return (116*lf(Y) - 16,
+    500*(lf(X/Xn)-lf(Y)),
+    200*(lf(Y)-lf(Z/Zn)))
 
-    return (L,a,b)
 def lf(t):
     return t**(1/3) if (t>6./29**3) else t/(3*6./29**2) + 4/29
-        
+def gammaToLinear(c):
+  return ((c + 0.055) / 1.055)**2.4 if c >= 0.04045 else c / 12.92
+  
+ 
+def rgbToOklab(rgb):
+  r,g,b = rgb
+  #This is my undersanding: JavaScript canvas and many other virtual and literal devices use gamma-corrected (non-linear lightness) RGB, or sRGB. To convert sRGB values for manipulation in the Oklab color space, you must first convert them to linear RGB. Where Oklab interfaces with RGB it expects and returns linear RGB values. This next step converts (via a function) sRGB to linear RGB for Oklab to use:
+  r = gammaToLinear(r / 255)
+  g = gammaToLinear(g / 255)
+  b = gammaToLinear(b / 255)
+  #This is the Oklab math:
+  l = math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b)
+  m = math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b)
+  s = math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b)
+  #Math.crb (cube root) here is the equivalent of the C++ cbrtf function here: https://bottosson.github.io/posts/oklab/#converting-from-linear-srgb-to-oklab
+  return (
+    l * +0.2104542553 + m * +0.7936177850 + s * -0.0040720468,
+    l * +1.9779984951 + m * -2.4285922050 + s * +0.4505937099,
+    l * +0.0259040371 + m * +0.7827717662 + s * -0.8086757660)
+  
+  
 main()
